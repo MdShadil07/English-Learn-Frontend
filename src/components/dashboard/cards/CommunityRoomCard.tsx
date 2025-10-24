@@ -13,7 +13,6 @@ interface PracticeRoom {
 
 interface CommunityRoomCardProps {
   rooms: PracticeRoom[];
-  onBrowseAll?: () => void;
 }
 
 // Function to get room-specific styling
@@ -38,7 +37,7 @@ export const getRoomStyle = (status: string, level: string) => {
   return baseStyles[status as keyof typeof baseStyles] || baseStyles.scheduled;
 };
 
-const CommunityRoomCard: React.FC<CommunityRoomCardProps> = ({ rooms, onBrowseAll }) => {
+const CommunityRoomCard: React.FC<CommunityRoomCardProps> = ({ rooms }) => {
   return (
     <div className="space-y-3 sm:space-y-4">
       {rooms.map((room, index) => {
@@ -118,7 +117,7 @@ const CommunityRoomCard: React.FC<CommunityRoomCardProps> = ({ rooms, onBrowseAl
                         {room.name}
                       </motion.h4>
 
-                      <div className="flex flex-col items-start gap-2 mb-3 flex-wrap">
+                      <div className="flex flex-row items-center gap-2 mb-3 flex-wrap">
                         <motion.div
                           className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-900/40 text-xs sm:text-sm font-medium text-emerald-700 dark:text-emerald-300 border border-emerald-200/40 dark:border-emerald-700/40"
                           whileHover={{ scale: 1.05 }}
@@ -150,9 +149,9 @@ const CommunityRoomCard: React.FC<CommunityRoomCardProps> = ({ rooms, onBrowseAl
                       </div>
 
                       {/* Room features */}
-                      <div className="flex flex-col items-start gap-2 flex-wrap mt-1">
+                      <div className="flex flex-row items-center gap-2 mt-1 flex-wrap">
                         <motion.div
-                          className="flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-purple-100/80 to-pink-100/80 dark:from-purple-900/40 dark:to-pink-900/40 text-xs font-medium text-purple-700 dark:text-purple-300 border border-purple-200/40 dark:border-purple-700/40"
+                          className="flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-purple-100/80 to-pink-100/80 dark:from-purple-900/40 dark:to-pink-900/40 text-xs sm:text-sm font-medium text-purple-700 dark:text-purple-300 border border-purple-200/40 dark:border-purple-700/40"
                           whileHover={{ scale: 1.05 }}
                         >
                           <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-gradient-to-r from-purple-400 to-pink-500"></div>
@@ -160,7 +159,7 @@ const CommunityRoomCard: React.FC<CommunityRoomCardProps> = ({ rooms, onBrowseAl
                         </motion.div>
 
                         <motion.div
-                          className="flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-emerald-100/80 to-teal-100/80 dark:from-emerald-900/40 dark:to-teal-900/40 text-xs font-medium text-emerald-700 dark:text-emerald-300 border border-emerald-200/40 dark:border-emerald-700/40"
+                          className="flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-emerald-100/80 to-teal-100/80 dark:from-emerald-900/40 dark:to-teal-900/40 text-xs sm:text-sm font-medium text-emerald-700 dark:text-emerald-300 border border-emerald-200/40 dark:border-emerald-700/40"
                           whileHover={{ scale: 1.05 }}
                         >
                           <Zap className="h-3 w-3" />
@@ -208,31 +207,6 @@ const CommunityRoomCard: React.FC<CommunityRoomCardProps> = ({ rooms, onBrowseAl
         );
       })}
 
-      {/* Browse All Button */}
-      {onBrowseAll && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 + rooms.length * 0.15 }}
-          className="pt-2"
-        >
-          <motion.button
-            onClick={onBrowseAll}
-            className="w-full flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl bg-gradient-to-r from-emerald-50/80 via-teal-50/80 to-cyan-50/80 dark:from-emerald-900/30 dark:via-teal-900/30 dark:to-cyan-900/30 border border-emerald-200/40 dark:border-emerald-700/40 text-emerald-700 dark:text-emerald-300 font-semibold hover:bg-gradient-to-r hover:from-emerald-100/90 hover:via-teal-100/90 hover:to-cyan-100/90 dark:hover:from-emerald-800/40 dark:hover:via-teal-800/40 dark:hover:to-cyan-800/40 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] text-sm sm:text-base"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-            Browse All Practice Rooms
-            <motion.div
-              animate={{ x: [0, 4, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              <span className="text-emerald-500">→</span>
-            </motion.div>
-          </motion.button>
-        </motion.div>
-      )}
     </div>
   );
 };

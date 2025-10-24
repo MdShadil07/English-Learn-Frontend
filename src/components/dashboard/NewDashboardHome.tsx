@@ -32,8 +32,10 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import WordOfTheDay from './WordOfTheDay';
-import { LearningPathCard, QuickActionCard, StatsCard, CommunityRoomCard } from './cards';
+import { LearningPathCard, QuickActionCard, StatsCard, CommunityRoomCard, DashboardCTACard } from './cards';
 import { getActivityStyle } from './cards/ActivityCard';
+import Footer from '@/components/layout/Footer';
+import NewsletterSubscription from '@/components/layout/NewsletterSubscription';
 
 interface LearningPath {
   id: string;
@@ -786,16 +788,47 @@ const NewDashboardHome = () => {
           {/* Use CommunityRoomCard component instead of redundant inline code */}
           <CommunityRoomCard
             rooms={practiceRooms}
-            onBrowseAll={() => {
-              // Handle browse all rooms
-              console.log('Browse all rooms');
-            }}
           />
         </motion.div>
-  </div>
-</div>
-);
+      </div>
 
+      {/* Dashboard CTA Card - Below Community Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.85 }}
+        className="mt-8 sm:mt-12"
+      >
+        <DashboardCTACard
+          onGetStarted={() => {
+            // Handle get started action
+            console.log('Get started clicked');
+          }}
+          onExploreFeatures={() => {
+            // Handle explore features action
+            console.log('Explore features clicked');
+          }}
+          onStartPractice={() => {
+            // Handle start practice action
+            console.log('Start practice clicked');
+          }}
+        />
+      </motion.div>
+
+      {/* Newsletter Subscription - Below CTA Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.9 }}
+        className="mt-8 sm:mt-12"
+      >
+        <NewsletterSubscription variant="dashboard" />
+      </motion.div>
+
+      {/* Footer - Using reusable component without newsletter */}
+      <Footer variant="dashboard" showNewsletter={false} />
+    </div>
+  );
 };
 
 export default NewDashboardHome;

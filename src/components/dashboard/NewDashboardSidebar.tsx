@@ -26,14 +26,6 @@ import {
   Mic,
   Video
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -262,7 +254,6 @@ const NewDashboardSidebar = ({ activeView, onViewChange, userStats }: SidebarPro
     >
       {/* Background decorative elements */}
       <div className="absolute inset-0 -z-10">
-        {/* Floating gradient orbs */}
         <div className="absolute -top-20 -right-20 w-96 h-96 rounded-full bg-gradient-to-br from-emerald-200/20 to-teal-200/20 dark:from-emerald-800/10 dark:to-teal-800/10 blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-gradient-to-tr from-cyan-200/20 to-emerald-200/20 dark:from-cyan-800/10 dark:to-emerald-800/10 blur-3xl animate-pulse delay-1000"></div>
 
@@ -335,7 +326,7 @@ const NewDashboardSidebar = ({ activeView, onViewChange, userStats }: SidebarPro
         </div>
       )}
 
-      {/* Enhanced Hero Stats Section - Top Position */}
+      {/* Enhanced Hero Stats Section - Top Position with User Info */}
       {!isCollapsed && userStats && (
         <motion.div
           className="px-4 py-4 relative z-10"
@@ -348,6 +339,31 @@ const NewDashboardSidebar = ({ activeView, onViewChange, userStats }: SidebarPro
             <div className="absolute inset-0 -z-10">
               <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br from-emerald-200/30 to-teal-200/30 dark:from-emerald-700/20 dark:to-teal-700/20 blur-xl animate-pulse"></div>
               <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-gradient-to-br from-cyan-200/30 to-emerald-200/30 dark:from-cyan-700/20 dark:to-emerald-700/20 blur-lg animate-pulse delay-1000"></div>
+            </div>
+
+            {/* User Info Header */}
+            <div className="p-4 pb-2 border-b border-emerald-200/30 dark:border-emerald-700/30">
+              <div className="flex items-center gap-3">
+                <motion.div
+                  whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Avatar className="h-12 w-12 border-2 border-emerald-200/40 dark:border-emerald-600/40 shadow-lg">
+                    <AvatarImage src={user?.avatar || undefined} alt={user?.fullName || "User"} />
+                    <AvatarFallback className="bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-800 dark:to-teal-800 text-emerald-700 dark:text-emerald-300 font-semibold">
+                      {user?.fullName?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </motion.div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold truncate text-emerald-900 dark:text-emerald-100">
+                    {user?.fullName || "Student"}
+                  </p>
+                  <p className="text-xs truncate text-emerald-600 dark:text-emerald-400">
+                    {user?.email}
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="p-6">
@@ -434,8 +450,6 @@ const NewDashboardSidebar = ({ activeView, onViewChange, userStats }: SidebarPro
           </div>
         </motion.div>
       )}
-
-      {/* Navigation Sections */}
       <div className="flex-1 overflow-y-auto py-4 space-y-6 scrollbar-thin scrollbar-thumb-emerald-300/30 scrollbar-track-transparent [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden relative z-10">
         {navSections.map((section) => (
           <div key={section.title} className="px-3">
@@ -463,79 +477,6 @@ const NewDashboardSidebar = ({ activeView, onViewChange, userStats }: SidebarPro
             </nav>
           </div>
         ))}
-      </div>
-
-      {/* User Profile Section */}
-      <div className="border-t border-emerald-200/30 dark:border-emerald-700/30 p-4 bg-gradient-to-r from-white/80 via-emerald-50/60 to-teal-50/70 dark:from-slate-900/80 dark:via-emerald-900/40 dark:to-teal-900/50 backdrop-blur-lg relative z-10">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <motion.div
-              className={cn(
-                "flex items-center gap-3 w-full rounded-2xl p-3 cursor-pointer transition-all duration-300 hover:bg-white/80 dark:hover:bg-slate-800/60 hover:shadow-lg border border-emerald-200/30 dark:border-emerald-700/30",
-                isCollapsed ? "justify-center" : "justify-start",
-                "bg-white/70 dark:bg-slate-800/60"
-              )}
-              whileHover={{ scale: 1.02, y: -2 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
-                transition={{ duration: 0.3 }}
-              >
-                <Avatar className="h-10 w-10 border-2 border-emerald-200/40 dark:border-emerald-600/40 shadow-lg">
-                  <AvatarImage src={user?.avatar || undefined} alt={user?.fullName || "User"} />
-                  <AvatarFallback className="bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-800 dark:to-teal-800 text-emerald-700 dark:text-emerald-300 font-semibold">
-                    {user?.fullName?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-              </motion.div>
-
-              {!isCollapsed && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate text-emerald-900 dark:text-emerald-100">
-                    {user?.fullName || "Student"}
-                  </p>
-                  <p className="text-xs truncate text-emerald-600 dark:text-emerald-400">
-                    {user?.email}
-                  </p>
-                </div>
-              )}
-            </motion.div>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent
-            className="w-56 rounded-2xl border border-emerald-200/40 dark:border-emerald-700/40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg shadow-2xl"
-            align="end"
-            side={isMobile ? "bottom" : "right"}
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className="font-normal p-4 rounded-t-2xl bg-gradient-to-r from-emerald-50/80 to-teal-50/80 dark:from-emerald-900/40 dark:to-teal-900/40 border-b border-emerald-200/30 dark:border-emerald-700/30">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none text-emerald-900 dark:text-emerald-100">{user?.fullName || "Student"}</p>
-                <p className="text-xs leading-none text-emerald-600 dark:text-emerald-400">{user?.email}</p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-emerald-200/30 dark:bg-emerald-700/30" />
-            <DropdownMenuItem onClick={() => navigate("/profile")} className="gap-3 rounded-lg hover:bg-emerald-50/80 dark:hover:bg-emerald-900/40 m-1">
-              <User className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-emerald-700 dark:text-emerald-300">Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/edit-profile")} className="gap-3 rounded-lg hover:bg-emerald-50/80 dark:hover:bg-emerald-900/40 m-1">
-              <User className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-emerald-700 dark:text-emerald-300">Edit Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-3 rounded-lg hover:bg-emerald-50/80 dark:hover:bg-emerald-900/40 m-1">
-              <Settings className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-emerald-700 dark:text-emerald-300">Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-emerald-200/30 dark:bg-emerald-700/30" />
-            <DropdownMenuItem onClick={handleLogout} className="gap-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50/80 dark:hover:bg-red-900/40 m-1">
-              <LogOut className="h-4 w-4" />
-              <span>Log out</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
       </div>
     </motion.aside>
   );

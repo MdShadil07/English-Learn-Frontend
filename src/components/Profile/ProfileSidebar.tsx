@@ -36,6 +36,7 @@ import ProfileSettings from './ProfileSettings';
 import { BasicPlanCard } from './BasicPlanCard';
 import { PremiumPlanCard } from './PremiumPlanCard';
 import { PremiumIcon, BasicIcon } from '@/components/Icons';
+import { FreeIcon } from '@/components/Icons';
 
 interface ProfileSidebarProps {
   showSidebar: boolean;
@@ -49,7 +50,7 @@ interface ProfileSidebarProps {
       totalXP: number;
     };
     isPremium: boolean;
-    subscriptionStatus: 'none' | 'basic' | 'premium';
+    subscriptionStatus: 'none' | 'free' | 'basic' | 'premium';
     preferences: {
       theme: 'light' | 'dark' | 'auto';
       language: string;
@@ -155,14 +156,32 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             opacity: 1;
           }
 
-          /* Hide scrollbar completely */
-          .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+          /* Floating animations */
+          @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
           }
 
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
+          @keyframes float-delayed {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(-3deg); }
+          }
+
+          .animate-float {
+            animation: float 3s ease-in-out infinite;
+          }
+
+          .nav-button-active {
+            background: linear-gradient(to right, #059669, #10b981) !important;
+            transition: none !important;
+          }
+
+          .nav-button-inactive {
+            transition: all 0.15s ease-in-out !important;
+          }
+
+          .nav-button-inactive:hover {
+            transform: translateY(-1px) scale(1.02) !important;
           }
         `
       }} />
@@ -193,7 +212,7 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
               <CardContent className="p-4">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="relative">
-                    <Avatar className="w-16 h-16 ring-2 ring-slate-200 dark:ring-slate-700 shadow-lg">
+                    <Avatar className="w-16 h-16 ring-4 ring-white/50 dark:ring-slate-700/50 shadow-lg">
                       <AvatarImage
                         src={profile.avatar_url}
                         alt="Profile"
@@ -212,6 +231,9 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                     {profile.subscriptionStatus === 'basic' && (
                       <BasicIcon size="sm" className="absolute -top-1 -right-1" />
                     )}
+                    {profile.subscriptionStatus === 'free' && (
+                      <FreeIcon size="sm" className="absolute -top-1 -right-1" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-slate-900 dark:text-slate-100 truncate text-base">{profile.fullName}</h3>
@@ -220,22 +242,67 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                 </div>
 
                 {/* Quick Stats with Modern Design */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gradient-to-br from-orange-100/80 to-red-100/80 dark:from-orange-900/40 dark:to-red-900/40 p-3 rounded-xl border border-orange-200/50 dark:border-orange-800/50">
-                    <div className="flex items-center gap-2">
-                      <Flame className="h-4 w-4 text-orange-600 flex-shrink-0" />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="relative overflow-hidden bg-gradient-to-br from-orange-50/90 via-red-50/90 to-amber-50/90 dark:from-orange-900/30 dark:via-red-900/30 dark:to-amber-900/30 backdrop-blur-xl p-3 rounded-2xl border border-orange-200/40 dark:border-orange-800/40 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
+                    {/* Background decorative elements */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-100/20 to-red-100/20 dark:from-orange-900/10 dark:to-red-900/10 rounded-2xl"></div>
+                    <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-gradient-to-br from-orange-400/60 to-red-400/60 animate-pulse"></div>
+                    <div className="absolute bottom-1 left-1 w-2 h-2 rounded-full bg-gradient-to-br from-red-400/40 to-orange-400/40 animate-pulse delay-500"></div>
+
+                    {/* Floating geometric shapes */}
+                    <div className="absolute top-2 right-8 w-4 h-4 rounded-lg bg-gradient-to-br from-orange-300/30 to-red-300/30 dark:from-orange-700/30 dark:to-red-700/30 rotate-45 animate-float opacity-60"></div>
+
+                    <div className="relative flex items-center gap-3">
+                      <motion.div
+                        animate={{
+                          rotate: [0, 10, -10, 0],
+                          scale: [1, 1.05, 1]
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                        className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg"
+                      >
+                        <Flame className="h-5 w-5" />
+                      </motion.div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-slate-600 dark:text-slate-400 truncate">Streak</p>
-                        <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{profile.stats.currentStreak}</p>
+                        <p className="text-xs font-semibold text-orange-700 dark:text-orange-300 mb-1">Current Streak</p>
+                        <p className="font-extrabold text-2xl text-orange-900 dark:text-orange-100">{profile.stats.currentStreak}</p>
+                        <p className="text-xs text-orange-600 dark:text-orange-400">days 🔥</p>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-gradient-to-br from-blue-100/80 to-indigo-100/80 dark:from-blue-900/40 dark:to-indigo-900/40 p-3 rounded-xl border border-blue-200/50 dark:border-blue-800/50">
-                    <div className="flex items-center gap-2">
-                      <Trophy className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                  <div className="relative overflow-hidden bg-gradient-to-br from-blue-50/90 via-indigo-50/90 to-purple-50/90 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 backdrop-blur-xl p-3 rounded-2xl border border-blue-200/40 dark:border-blue-800/40 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
+                    {/* Background decorative elements */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-100/20 to-indigo-100/20 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-2xl"></div>
+                    <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-gradient-to-br from-blue-400/60 to-indigo-400/60 animate-pulse"></div>
+                    <div className="absolute bottom-1 left-1 w-2 h-2 rounded-full bg-gradient-to-br from-indigo-400/40 to-blue-400/40 animate-pulse delay-500"></div>
+
+                    {/* Floating geometric shapes */}
+                    <div className="absolute top-2 right-8 w-4 h-4 rounded-lg bg-gradient-to-br from-blue-300/30 to-indigo-300/30 dark:from-blue-700/30 dark:to-indigo-700/30 rotate-45 animate-float opacity-60"></div>
+
+                    <div className="relative flex items-center gap-3">
+                      <motion.div
+                        animate={{
+                          rotate: [0, 10, -10, 0],
+                          scale: [1, 1.05, 1]
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: 0.5
+                        }}
+                        className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-lg"
+                      >
+                        <Trophy className="h-5 w-5" />
+                      </motion.div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-slate-600 dark:text-slate-400 truncate">XP</p>
-                        <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{profile.stats.totalXP.toLocaleString()}</p>
+                        <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">Total XP</p>
+                        <p className="font-extrabold text-2xl text-blue-900 dark:text-blue-100">{profile.stats.totalXP.toLocaleString()}</p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400">points earned 🏆</p>
                       </div>
                     </div>
                   </div>
@@ -243,16 +310,75 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 
                 {/* Premium Badge */}
                 {profile.subscriptionStatus === 'premium' && (
-                  <div className="mt-3 flex items-center gap-2 bg-gradient-to-r from-yellow-100/90 to-amber-100/90 dark:from-yellow-900/40 dark:to-amber-900/40 rounded-full px-3 py-1.5 border border-yellow-200/60 dark:border-yellow-800/60">
-                    <PremiumIcon size="md" className="flex-shrink-0" />
-                    <span className="text-xs font-semibold text-yellow-800 dark:text-yellow-300">Premium Member</span>
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                    className="mt-3 relative overflow-hidden bg-gradient-to-br from-yellow-50/90 via-amber-50/90 to-orange-50/90 dark:from-yellow-900/30 dark:via-amber-900/30 dark:to-orange-900/30 backdrop-blur-xl rounded-2xl px-3 py-2 border border-yellow-200/50 dark:border-yellow-800/50 shadow-xl hover:shadow-2xl transition-all duration-500"
+                  >
+                    {/* Background decorative elements */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-100/30 to-amber-100/30 dark:from-yellow-900/15 dark:to-amber-900/15 rounded-2xl"></div>
+                    <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-gradient-to-br from-yellow-400/60 to-orange-400/60 animate-pulse"></div>
+                    <div className="absolute bottom-1 left-1 w-2 h-2 rounded-full bg-gradient-to-br from-orange-400/40 to-yellow-400/40 animate-pulse delay-500"></div>
+
+                    <div className="relative flex items-center gap-3">
+                      <motion.div
+                        animate={{
+                          rotate: [0, 5, -5, 0],
+                          scale: [1, 1.1, 1]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                        className="p-2 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg"
+                      >
+                        <PremiumIcon size="md" className="flex-shrink-0" />
+                      </motion.div>
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-yellow-800 dark:text-yellow-200 mb-1">Premium Member</p>
+                        <p className="text-xs text-yellow-700 dark:text-yellow-300">All Features Unlocked</p>
+                      </div>
+                    </div>
+
+                    {/* Decorative progress ring */}
+                    <div className="absolute top-2 right-8 w-6 h-6 rounded-full border-2 border-yellow-400/30 dark:border-yellow-600/30 animate-pulse"></div>
+                  </motion.div>
                 )}
                 {profile.subscriptionStatus === 'basic' && (
-                  <div className="mt-3 flex items-center gap-2 bg-gradient-to-r from-slate-100/90 to-slate-200/90 dark:from-slate-800/40 dark:to-slate-700/40 rounded-full px-3 py-1.5 border border-slate-200/60 dark:border-slate-700/60">
-                    <BasicIcon size="md" className="flex-shrink-0" />
-                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-300">Basic Member</span>
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                    className="mt-3 relative overflow-hidden bg-gradient-to-br from-slate-50/90 via-gray-50/90 to-zinc-50/90 dark:from-slate-800/30 dark:via-gray-800/30 dark:to-zinc-800/30 backdrop-blur-xl rounded-2xl px-3 py-2 border border-slate-200/50 dark:border-slate-700/50 shadow-xl hover:shadow-2xl transition-all duration-500"
+                  >
+                    {/* Background decorative elements */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-100/30 to-gray-100/30 dark:from-slate-800/15 dark:to-gray-800/15 rounded-2xl"></div>
+                    <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-gradient-to-br from-slate-400/60 to-gray-400/60 animate-pulse"></div>
+                    <div className="absolute bottom-1 left-1 w-2 h-2 rounded-full bg-gradient-to-br from-gray-400/40 to-slate-400/40 animate-pulse delay-500"></div>
+
+                    <div className="relative flex items-center gap-3">
+                      <motion.div
+                        animate={{
+                          rotate: [0, 5, -5, 0],
+                          scale: [1, 1.05, 1]
+                        }}
+                        transition={{
+                          duration: 2.5,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                        className="p-2 rounded-xl bg-gradient-to-br from-slate-500 to-gray-600 text-white shadow-lg"
+                      >
+                        <BasicIcon size="md" className="flex-shrink-0" />
+                      </motion.div>
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Basic Member</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">Core Features Available</p>
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
               </CardContent>
             </Card>
@@ -272,30 +398,31 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                       <motion.button
                         key={view.id}
                         onClick={() => onViewChange(view.id as any)}
-                        className={`relative flex-shrink-0 px-3 py-2.5 rounded-lg transition-all duration-300 flex items-center gap-2 min-w-[95px] sm:min-w-[100px] ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-lg transform scale-105' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
-                        whileHover={{ scale: 1.02, y: -1 }}
-                        whileTap={{ scale: 0.98 }}
+                        className={`relative flex-shrink-0 px-3 py-2.5 rounded-lg flex items-center gap-2 min-w-[95px] sm:min-w-[100px] ${isActive ? 'nav-button-active bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg border-0' : 'nav-button-inactive bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:shadow-md'}`}
+                        whileHover={isActive ? {} : { scale: 1.02, y: -1 }}
+                        whileTap={isActive ? {} : { scale: 0.98 }}
                       >
-                        <Icon className={`h-4 w-4 ${isActive ? 'text-slate-900 dark:text-slate-100' : getIconColor(view.color)}`} />
-                        <span className={`text-xs font-semibold ${isActive ? 'text-slate-900 dark:text-slate-100' : ''}`}>
+                        <Icon className={`h-4 w-4 ${isActive ? 'text-white' : getIconColor(view.color)}`} />
+                        <span className={`text-xs font-semibold ${isActive ? 'text-white' : ''}`}>
                           {view.label}
                         </span>
 
                         {/* Active State Pulse Effect - Behind content */}
                         {isActive && (
                           <motion.div
-                            className="absolute inset-0 bg-slate-100 dark:bg-slate-800 rounded-lg shadow-lg -z-10"
+                            className="absolute inset-0 bg-emerald-100 dark:bg-emerald-800 rounded-lg shadow-lg -z-10"
                             animate={{
                               boxShadow: [
-                                "0 0 0 0 rgba(148, 163, 184, 0.7)",
-                                "0 0 0 4px rgba(148, 163, 184, 0)",
-                                "0 0 0 0 rgba(148, 163, 184, 0)"
+                                "0 0 0 0 rgba(5, 150, 105, 0.7)",
+                                "0 0 0 4px rgba(5, 150, 105, 0)",
+                                "0 0 0 0 rgba(5, 150, 105, 0)"
                               ]
                             }}
                             transition={{
                               duration: 2,
                               repeat: Infinity,
-                              ease: "easeInOut"
+                              ease: "easeInOut",
+                              repeatDelay: 1
                             }}
                           />
                         )}
@@ -417,13 +544,7 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                       <div className="bg-gradient-to-br from-slate-50/90 to-indigo-50/90 dark:from-slate-800/90 dark:to-slate-900/90 rounded-xl p-4 border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-sm">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Current Plan</span>
-                          <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
-                            profile.subscriptionStatus === 'premium'
-                              ? 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 dark:from-yellow-900/30 dark:text-yellow-300'
-                              : profile.subscriptionStatus === 'basic'
-                              ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                              : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                          }`}>
+                          <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${profile.subscriptionStatus === 'premium' ? 'bg-gradient-to-r from-amber-100 via-yellow-100 to-orange-100 text-amber-800 dark:from-amber-900/30 dark:via-yellow-900/30 dark:to-orange-900/30 dark:text-amber-300' : profile.subscriptionStatus === 'basic' ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300' : profile.subscriptionStatus === 'free' ? 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-700 dark:from-gray-900/30 dark:to-slate-900/30 dark:text-gray-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
                             {profile.subscriptionStatus === 'premium' ? (
                               <>
                                 <PremiumIcon size="md" className="flex-shrink-0" />
@@ -433,6 +554,11 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                               <>
                                 <BasicIcon size="md" className="flex-shrink-0" />
                                 Basic
+                              </>
+                            ) : profile.subscriptionStatus === 'free' ? (
+                              <>
+                                <FreeIcon size="md" className="flex-shrink-0" />
+                                Free
                               </>
                             ) : (
                               <>
@@ -445,6 +571,12 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                           <Button size="sm" className="w-full text-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white border-0 shadow-lg">
                             <Crown className="h-3 w-3 mr-2" />
                             Choose a Plan
+                          </Button>
+                        )}
+                        {profile.subscriptionStatus === 'free' && (
+                          <Button size="sm" className="w-full text-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white border-0 shadow-lg">
+                            <Crown className="h-3 w-3 mr-2" />
+                            Upgrade to Basic
                           </Button>
                         )}
                         {profile.subscriptionStatus === 'basic' && (

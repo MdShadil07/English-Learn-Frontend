@@ -7,7 +7,7 @@ export interface UserProfile {
   avatar_url?: string;
   level: number;
   isPremium: boolean;
-  subscriptionStatus: 'none' | 'basic' | 'premium';
+  subscriptionStatus: 'none' | 'free' | 'basic' | 'premium';
   role: 'student' | 'teacher' | 'admin';
   bio?: string;
   location?: string;

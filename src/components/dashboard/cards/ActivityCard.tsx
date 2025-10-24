@@ -14,7 +14,6 @@ interface RecentActivity {
 
 interface ActivityCardProps {
   activities: RecentActivity[];
-  onViewAll?: () => void;
 }
 
 // Function to get activity-specific styling
@@ -60,146 +59,145 @@ const getTimeStyle = (time: string) => {
   return 'text-slate-600 dark:text-slate-500';
 };
 
-const ActivityCard: React.FC<ActivityCardProps> = ({ activities, onViewAll }) => {
+const ActivityCard: React.FC<ActivityCardProps> = ({ activities }) => {
   return (
-    <div className="space-y-3">
-      {activities.map((activity, index) => {
-        const activityStyle = getActivityStyle(activity.type, activity.color);
+    <div className="h-96 flex flex-col">
+      <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+        {activities.map((activity, index) => {
+          const activityStyle = getActivityStyle(activity.type, activity.color);
 
-        return (
-          <motion.div
-            key={activity.id}
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{
-              delay: 0.1 + index * 0.1,
-              duration: 0.5,
-              type: "spring",
-              stiffness: 100
-            }}
-            whileHover={{
-              scale: 1.02,
-              y: -2,
-              transition: { duration: 0.2 }
-            }}
-            className="group cursor-pointer"
-          >
-            <div className="relative overflow-hidden rounded-2xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border border-emerald-200/30 dark:border-emerald-700/30 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all duration-300 hover:shadow-lg hover:border-emerald-300/40 dark:hover:border-emerald-600/40">
-              {/* Hover glow effect */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-400/0 via-teal-400/0 to-cyan-400/0 group-hover:from-emerald-400/10 group-hover:via-teal-400/10 group-hover:to-cyan-400/10 transition-all duration-300 -z-10"></div>
+          return (
+            <motion.div
+              key={activity.id}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{
+                delay: 0.1 + index * 0.1,
+                duration: 0.5,
+                type: "spring",
+                stiffness: 100
+              }}
+              whileHover={{
+                scale: 1.02,
+                y: -2,
+                transition: { duration: 0.2 }
+              }}
+              className="group cursor-pointer"
+            >
+              <div className="relative overflow-hidden rounded-2xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border border-emerald-200/30 dark:border-emerald-700/30 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all duration-300 hover:shadow-lg hover:border-emerald-300/40 dark:hover:border-emerald-600/40">
+                {/* Hover glow effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-400/0 via-teal-400/0 to-cyan-400/0 group-hover:from-emerald-400/10 group-hover:via-teal-400/10 group-hover:to-cyan-400/10 transition-all duration-300 -z-10"></div>
 
-              <div className="p-4">
-                <div className="flex items-start gap-4">
-                  {/* Enhanced Icon */}
-                  <motion.div
-                    className={cn(
-                      'flex-shrink-0 p-3 rounded-2xl shadow-lg transition-all duration-300 group-hover:scale-110',
-                      activityStyle.iconBg
-                    )}
-                    whileHover={{
-                      rotate: [0, -5, 5, 0],
-                      scale: 1.1
-                    }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <activity.icon className="h-5 w-5 text-white drop-shadow-sm" />
-                  </motion.div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
+                <div className="p-4">
+                  <div className="flex items-start gap-4">
+                    {/* Enhanced Icon */}
                     <motion.div
-                      className="flex items-start justify-between mb-2"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 + index * 0.1 }}
+                      className={cn(
+                        'flex-shrink-0 p-3 rounded-2xl shadow-lg transition-all duration-300 group-hover:scale-110',
+                        activityStyle.iconBg
+                      )}
+                      whileHover={{
+                        rotate: [0, -5, 5, 0],
+                        scale: 1.1
+                      }}
+                      transition={{ duration: 0.4 }}
                     >
-                      <div className="flex-1">
-                        <motion.h4
-                          className={cn(
-                            'text-sm font-semibold leading-tight mb-1 transition-colors duration-300 group-hover:text-emerald-700 dark:group-hover:text-emerald-300',
-                            activityStyle.textColor
-                          )}
-                          initial={{ opacity: 0, x: -10 }}
+                      <activity.icon className="h-5 w-5 text-white drop-shadow-sm" />
+                    </motion.div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <motion.div
+                        className="flex items-start justify-between mb-2"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 + index * 0.1 }}
+                      >
+                        <div className="flex-1">
+                          <motion.h4
+                            className={cn(
+                              'text-sm font-semibold leading-tight mb-1 transition-colors duration-300 group-hover:text-emerald-700 dark:group-hover:text-emerald-300',
+                              activityStyle.textColor
+                            )}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 + index * 0.1 }}
+                          >
+                            {activity.title}
+                          </motion.h4>
+
+                          {/* Activity type badge */}
+                          <motion.div
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-900/40 text-xs font-medium text-emerald-700 dark:text-emerald-300 border border-emerald-200/40 dark:border-emerald-700/40"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.4 + index * 0.1 }}
+                            whileHover={{ scale: 1.05 }}
+                          >
+                            <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${activityStyle.gradient}`}></div>
+                            <span className="capitalize">{activity.type}</span>
+                          </motion.div>
+                        </div>
+
+                        {/* Time indicator */}
+                        <motion.div
+                          className="flex-shrink-0 flex flex-col items-end"
+                          initial={{ opacity: 0, x: 10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.3 + index * 0.1 }}
                         >
-                          {activity.title}
-                        </motion.h4>
-
-                        {/* Activity type badge */}
-                        <motion.div
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-900/40 text-xs font-medium text-emerald-700 dark:text-emerald-300 border border-emerald-200/40 dark:border-emerald-700/40"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.4 + index * 0.1 }}
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${activityStyle.gradient}`}></div>
-                          <span className="capitalize">{activity.type}</span>
+                          <div className={cn(
+                            'flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full',
+                            activityStyle.bgColor,
+                            getTimeStyle(activity.time)
+                          )}>
+                            <Clock className="h-3 w-3" />
+                            <span>{activity.time}</span>
+                          </div>
                         </motion.div>
-                      </div>
-
-                      {/* Time indicator */}
-                      <motion.div
-                        className="flex-shrink-0 flex flex-col items-end"
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 + index * 0.1 }}
-                      >
-                        <div className={cn(
-                          'flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full',
-                          activityStyle.bgColor,
-                          getTimeStyle(activity.time)
-                        )}>
-                          <Clock className="h-3 w-3" />
-                          <span>{activity.time}</span>
-                        </div>
                       </motion.div>
-                    </motion.div>
 
-                    {/* Progress indicator line */}
-                    <motion.div
-                      className="w-full h-0.5 bg-gradient-to-r from-transparent via-emerald-200/50 to-transparent dark:via-emerald-700/30 rounded-full"
-                      initial={{ scaleX: 0 }}
-                      animate={{ scaleX: 1 }}
-                      transition={{ delay: 0.5 + index * 0.1, duration: 0.8 }}
-                    />
+                      {/* Progress indicator line */}
+                      <motion.div
+                        className="w-full h-0.5 bg-gradient-to-r from-transparent via-emerald-200/50 to-transparent dark:via-emerald-700/30 rounded-full"
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={{ delay: 0.5 + index * 0.1, duration: 0.8 }}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Subtle decorative elements */}
-                <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-gradient-to-br from-emerald-200/20 to-teal-200/20 dark:from-emerald-700/10 dark:to-teal-700/10 blur-sm group-hover:scale-150 transition-transform duration-500"></div>
+                  {/* Subtle decorative elements */}
+                  <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-gradient-to-br from-emerald-200/20 to-teal-200/20 dark:from-emerald-700/10 dark:to-teal-700/10 blur-sm group-hover:scale-150 transition-transform duration-500"></div>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        );
-      })}
+            </motion.div>
+          );
+        })}
+      </div>
 
       {/* View All Button */}
-      {onViewAll && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 + activities.length * 0.1 }}
-          className="pt-2"
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 + activities.length * 0.1 }}
+        className="mt-3"
+      >
+        <motion.button
+          className="w-full flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl bg-gradient-to-r from-emerald-50/80 via-teal-50/80 to-cyan-50/80 dark:from-emerald-900/30 dark:via-teal-900/30 dark:to-cyan-900/30 border border-emerald-200/40 dark:border-emerald-700/40 text-emerald-700 dark:text-emerald-300 font-semibold hover:bg-gradient-to-r hover:from-emerald-100/90 hover:via-teal-100/90 hover:to-cyan-100/90 dark:hover:from-emerald-800/40 dark:hover:via-teal-800/40 dark:hover:to-cyan-800/40 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] text-sm sm:text-base"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          <motion.button
-            onClick={onViewAll}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-50/80 to-teal-50/80 dark:from-emerald-900/30 dark:to-teal-900/30 border border-emerald-200/40 dark:border-emerald-700/40 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-gradient-to-r hover:from-emerald-100/90 hover:to-teal-100/90 dark:hover:from-emerald-800/40 dark:hover:to-teal-800/40 hover:shadow-md transition-all duration-300 hover:scale-[1.02]"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
+          View All Activity
+          <motion.div
+            animate={{ x: [0, 4, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
           >
-            <TrendingUp className="h-4 w-4" />
-            View All Activity
-            <motion.div
-              animate={{ x: [0, 3, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              <span className="text-emerald-500">→</span>
-            </motion.div>
-          </motion.button>
-        </motion.div>
-      )}
+            <span className="text-emerald-500">→</span>
+          </motion.div>
+        </motion.button>
+      </motion.div>
     </div>
   );
 };

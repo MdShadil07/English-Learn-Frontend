@@ -1,4 +1,5 @@
 export {
+  FreeIcon,
   BasicIcon,
   PremiumIcon,
   CrownIcon,

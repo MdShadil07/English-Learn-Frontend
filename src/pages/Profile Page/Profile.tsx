@@ -5,15 +5,34 @@ import { useAuth } from '../../contexts';
 import { ProfileSidebar } from '../../components/Profile/ProfileSidebar';
 import { AchievementCard, LearningGoalCard, ActivityCard } from '../../components/Profile/ProfileComponents';
 import ProfileStats from '../../components/Profile/ProfileStats';
-import ProfileSettings from '../../components/Profile/ProfileSettings';
-import ProfilePhotoUpload from '../../components/Profile/ProfilePhotoUpload';
-import { BasicPlanCard } from '../../components/Profile/BasicPlanCard';
-import { PremiumPlanCard } from '../../components/Profile/PremiumPlanCard';
+import ProfileHero from '../../components/Profile/ProfileHero';
 import { PremiumIcon, BasicIcon, LinkedinIcon, TwitterIcon, GithubIcon, InstagramIcon, FacebookIcon } from '../../components/Icons/index';
-import BasicHeader from '../../components/layout/BasicHeader';
-import Footer from '../../components/Landing Page Component/Footer';
-import { Button } from '@/components/ui/button';
-import { Trophy, Star, Flame, Clock, Target, Lightbulb, Settings, Activity, Crown, Menu, GraduationCap, Briefcase, User, BookOpen, X } from 'lucide-react';
+import { BasicHeader } from '../../components/layout';
+import { BasicPlanCard, PremiumPlanCard } from '../../components/Profile';
+import { Button } from '../../components/ui/button';
+import {
+  Trophy,
+  Star,
+  Flame,
+  Clock,
+  Target,
+  Lightbulb,
+  Settings,
+  Activity,
+  Crown,
+  Menu,
+  GraduationCap,
+  Briefcase,
+  User,
+  BookOpen,
+  X,
+  Sparkles,
+  Brain,
+  Play,
+  BarChart3,
+  ArrowRight,
+  TrendingUp
+} from 'lucide-react';
 import { UserProfile } from '@/types/user';
 
 const Profile: React.FC = () => {
@@ -156,8 +175,8 @@ const Profile: React.FC = () => {
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
-  const handleViewChange = (view: 'overview' | 'achievements' | 'settings' | 'activity' | 'subscription') => {
-    setActiveView(view);
+  const handleSidebarToggle = (open: boolean) => {
+    setShowSidebar(open);
   };
 
   if (isLoading || isLoadingProfile) {
@@ -188,17 +207,19 @@ const Profile: React.FC = () => {
         user={{
           id: user?.id || '1',
           email: user?.email || 'user@example.com',
-          fullName: user?.email?.split('@')[0]?.replace(/[^a-zA-Z0-9]/g, ' ') || 'Alex Johnson',
+          fullName: user.firstName && user.lastName || 'Alex Johnson',
           avatar_url: profile?.avatar_url,
           isPremium: profile?.isPremium,
+          subscriptionStatus: profile?.subscriptionStatus,
         }}
         onLogout={() => {
           // Handle logout logic here
         }}
         showSidebarToggle={true}
-        onSidebarToggle={setShowSidebar}
-        title="FluentPro"
-        subtitle="English Learning"
+        onSidebarToggle={handleSidebarToggle}
+        sidebarOpen={showSidebar}
+        title="CognitoSpeak"
+        subtitle="AI Learning Platform"
       />
 
       {/* Main Layout Container */}
@@ -244,94 +265,8 @@ const Profile: React.FC = () => {
         {/* START OF LAYOUT AS REQUESTED                                       */}
         {/* ================================================================== */}
 
-        {/* ROW 1: Hero / Header - Always visible (Full Width) */}
-        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl p-8 shadow-lg border border-indigo-100 dark:border-slate-700 relative overflow-hidden mt-12">
-          {/* Background decoration */}
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8 pt-6 sm:pt-8">
-            {/* User Avatar Section - Left Hand Side */}
-            <div className="flex flex-col items-center gap-3 sm:gap-4">
-              <div className="relative">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl sm:rounded-2xl flex items-center justify-center border-2 border-indigo-200/50 dark:border-indigo-800/50 shadow-lg">
-                  <User className="h-8 w-8 sm:h-10 sm:w-10 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                {profile.subscriptionStatus === 'premium' && (
-                  <PremiumIcon size="sm" className="absolute -top-2 -right-2" />
-                )}
-                {profile.subscriptionStatus === 'basic' && (
-                  <BasicIcon size="sm" className="absolute -top-2 -right-2" />
-                )}
-              </div>
-              <div className="text-center">
-                <p className="text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100">{profile.fullName}</p>
-                <p className="text-xs text-slate-600 dark:text-slate-400 hidden sm:block">{profile.email}</p>
-                <div className="flex items-center justify-center gap-1 mt-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-green-600 dark:text-green-400">Active</span>
-                </div>
-              </div>
-            </div>
-
-            {/* User Info Section - Center/Right */}
-            <div className="flex-1 text-center lg:text-left">
-              {/* Welcome Message */}
-              <div className="mb-6">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white mb-2">
-                  {profile.fullName}
-                </h1>
-                <div className="flex flex-wrap justify-center lg:justify-start items-center gap-2 sm:gap-3 mb-3">
-                  <div className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
-                    profile.role === 'Student'
-                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                      : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                  }`}>
-                    {profile.role}
-                  </div>
-                  <div className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
-                    profile.subscriptionStatus === 'premium'
-                      ? 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 dark:from-yellow-900/30 dark:text-yellow-300'
-                      : profile.subscriptionStatus === 'basic'
-                      ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                      : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                  }`}>
-                    {profile.subscriptionStatus === 'premium' ? (
-                      <>
-                        <PremiumIcon size="sm" className="flex-shrink-0" />
-                        Premium
-                      </>
-                    ) : profile.subscriptionStatus === 'basic' ? (
-                      <>
-                        <BasicIcon size="sm" className="flex-shrink-0" />
-                        Basic
-                      </>
-                    ) : (
-                      'No Subscription'
-                    )}
-                  </div>
-                </div>
-
-                {/* About Section */}
-                {profile.bio && (
-                  <div className="bg-slate-50/50 dark:bg-slate-800/50 rounded-lg p-3 sm:p-4 border border-slate-200/50 dark:border-slate-700/50 max-w-lg mx-auto lg:mx-0">
-                    <h3 className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">About</h3>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{profile.bio}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Quick Actions Row */}
-              <div className="flex flex-wrap justify-center lg:justify-start gap-2 sm:gap-3">
-                <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200">
-                  <Target className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                  Start Learning
-                </Button>
-                <Button variant="outline" size="sm" className="border-indigo-200 dark:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all duration-200">
-                  <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                  View Achievements
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Advanced Hero Welcome Section - Matching Dashboard Design */}
+        <ProfileHero profile={profile} />
 
 
         {/* Personal Information */}
@@ -919,9 +854,6 @@ const Profile: React.FC = () => {
         </div>
 
         </div>
-
-        {/* Footer */}
-        <Footer />
       </div>
     </div>
   );

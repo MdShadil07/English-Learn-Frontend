@@ -3,6 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+
 import Index from "./pages/Landing Page/Index.tsx";
 import Login from "./pages/auth/Login.tsx";
 import Signup from "./pages/auth/Signup.tsx";
@@ -10,9 +13,8 @@ import ForgotPassword from "./pages/auth/ForgotPassword.tsx";
 import NewDashboard from "./pages/Dashboard Page/NewDashboard.tsx";
 import Profile from "./pages/Profile Page/Profile.tsx";
 import EditProfile from "./pages/Edit Profile Page/EditProfile.tsx";
+import Settings from "./pages/Settings Page/Settings.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import { AuthProvider } from "./contexts";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +52,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <EditProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />

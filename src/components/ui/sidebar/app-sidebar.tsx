@@ -25,7 +25,18 @@ import {
   Settings,
   User,
   LogOut,
+  Edit3,
+  ChevronDown,
 } from "lucide-react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +46,6 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
-
 import { TeamSwitcher } from "@/components/ui/sidebar/team-switcher";
 import {
   Sidebar,
@@ -273,6 +283,10 @@ export function AppSidebar({
     onViewChange(view);
   };
 
+  const handleProfileNav = (path: string) => {
+    navigate(path);
+  };
+
   // small helper for active/glow styles
   const activeBtnClass = "relative overflow-visible";
   const activeInnerClass =
@@ -320,77 +334,119 @@ export function AppSidebar({
         <div className="space-y-6 h-full flex flex-col">
           {/* User Profile Card */}
           {!isCollapsed ? (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-white/60 to-teal-50/80 dark:from-emerald-900/30 dark:via-slate-800/60 dark:to-teal-900/40 border border-emerald-200/40 dark:border-emerald-700/30 shadow-lg"
-            >
-              <div className="flex items-center gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-white/60 to-teal-50/80 dark:from-emerald-900/30 dark:via-slate-800/60 dark:to-teal-900/40 border border-emerald-200/40 dark:border-emerald-700/30 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-200"
                 >
-                  <Avatar className="h-12 w-12 border-2 border-emerald-200/60 dark:border-emerald-600/40 shadow-md">
-                    <AvatarImage src={user?.avatar || undefined} alt={user?.fullName || "User"} />
-                    <AvatarFallback className="bg-gradient-to-br from-emerald-400 to-teal-500 text-white font-semibold text-lg">
-                      {user?.fullName?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="flex items-center gap-3">
+                    <motion.div
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <Avatar className="h-12 w-12 border-2 border-emerald-200/60 dark:border-emerald-600/40 shadow-md">
+                        <AvatarImage src={user?.avatar || undefined} alt={user?.fullName || "User"} />
+                        <AvatarFallback className="bg-gradient-to-br from-emerald-400 to-teal-500 text-white font-semibold text-lg">
+                          {user?.fullName?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </motion.div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 truncate">
+                          {user?.fullName || "Student"}
+                        </h3>
+                        <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 animate-pulse"></div>
+                      </div>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 truncate mb-1">
+                        {user?.email || "student@example.com"}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500"></div>
+                        <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                          Student
+                        </span>
+                      </div>
+                    </div>
+
+                    <ChevronDown className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+
+                  {/* Quick stats in user card */}
+                  <div className="mt-3 pt-3 border-t border-emerald-200/30 dark:border-emerald-700/30">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                        <Flame className="h-3 w-3" />
+                        <span className="font-medium">{userStats?.streak || 0} day streak</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-purple-600 dark:text-purple-400">
+                        <Trophy className="h-3 w-3" />
+                        <span className="font-medium">Level {userStats?.level || 1}</span>
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 truncate">
-                      {user?.fullName || "Student"}
-                    </h3>
-                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 animate-pulse"></div>
-                  </div>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 truncate mb-1">
-                    {user?.email || "student@example.com"}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500"></div>
-                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                      Student
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick stats in user card */}
-              <div className="mt-3 pt-3 border-t border-emerald-200/30 dark:border-emerald-700/30">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                    <Flame className="h-3 w-3" />
-                    <span className="font-medium">{userStats?.streak || 0} day streak</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-purple-600 dark:text-purple-400">
-                    <Trophy className="h-3 w-3" />
-                    <span className="font-medium">Level {userStats?.level || 1}</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleProfileNav('/profile')}>
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleProfileNav('/edit-profile')}>
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleProfileNav('/settings')}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="flex justify-center py-2"
-            >
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Avatar className="h-10 w-10 border-2 border-emerald-200/60 dark:border-emerald-600/40 shadow-md">
-                  <AvatarImage src={user?.avatar || undefined} alt={user?.fullName || "User"} />
-                  <AvatarFallback className="bg-gradient-to-br from-emerald-400 to-teal-500 text-white font-semibold">
-                    {user?.fullName?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-              </motion.div>
-            </motion.div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex justify-center py-2 cursor-pointer"
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <Avatar className="h-10 w-10 border-2 border-emerald-200/60 dark:border-emerald-600/40 shadow-md">
+                      <AvatarImage src={user?.avatar || undefined} alt={user?.fullName || "User"} />
+                      <AvatarFallback className="bg-gradient-to-br from-emerald-400 to-teal-500 text-white font-semibold">
+                        {user?.fullName?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </motion.div>
+                </motion.div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleProfileNav('/profile')}>
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleProfileNav('/edit-profile')}>
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleProfileNav('/settings')}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
 
           {/* Scroll area for nav */}

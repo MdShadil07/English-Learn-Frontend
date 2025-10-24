@@ -676,8 +676,8 @@ const EditProfile: React.FC = () => {
         onLogout={() => {}}
         showSidebarToggle={false}
         sidebarOpen={false}
-        title="Edit Profile"
-        subtitle="Update your information"
+        title="CognitoSpeak"
+        subtitle="AI Learning Platform"
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
