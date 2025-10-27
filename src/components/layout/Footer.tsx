@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Facebook, Twitter, Instagram, Linkedin, Github } from 'lucide-react';
-import { Logo } from '@/components/Icons';
+import { Logo } from '@/components/Icons/Logo';
 import NewsletterSubscription from './NewsletterSubscription';
 
 interface FooterProps {

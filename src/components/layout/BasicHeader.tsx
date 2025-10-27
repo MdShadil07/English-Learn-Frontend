@@ -24,16 +24,16 @@ import {
   Bell,
   Calendar,
 } from 'lucide-react';
-import { PremiumIcon } from '../Icons';
-import { BasicIcon, FreeIcon } from '../Icons';
+import { PremiumPlanIcon, BasicPlanIcon, FreePlanIcon } from '../Icons';
 
 interface User {
   id: string;
   email: string;
   fullName?: string;
-  avatar_url?: string;
+  avatar?: string; // Updated to match auth controller response
   isPremium?: boolean;
-  subscriptionStatus?: 'none' | 'free' | 'basic' | 'premium';
+  subscriptionStatus?: 'none' | 'free' | 'basic' | 'premium' | 'pro';
+  role?: 'student' | 'teacher' | 'admin';
 }
 
 interface BasicHeaderProps {
@@ -171,9 +171,9 @@ const BasicHeader: React.FC<BasicHeaderProps> = ({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all duration-200 rounded-xl ml-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-lg border border-emerald-200/30">
-                      {user?.avatar_url ? (
+                      {user?.avatar ? (
                         <img
-                          src={user.avatar_url}
+                          src={user.avatar}
                           alt="Profile"
                           className="w-full h-full rounded-full object-cover"
                         />
@@ -187,13 +187,14 @@ const BasicHeader: React.FC<BasicHeaderProps> = ({
                       </span>
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-emerald-600 dark:text-emerald-400">
-                          {user?.subscriptionStatus === 'premium' ? 'Premium' :
-                           user?.subscriptionStatus === 'basic' ? 'Basic' :
-                           user?.subscriptionStatus === 'free' ? 'Free' : 'Basic'}
+                          {user?.role === 'teacher' ? 'Teacher' :
+                           user?.role === 'admin' ? 'Admin' :
+                           user?.role === 'student' ? 'Student' : 'Student'}
                         </span>
-                        {user?.subscriptionStatus === 'premium' && <PremiumIcon size="sm" className="flex-shrink-0" />}
-                        {user?.subscriptionStatus === 'basic' && <BasicIcon size="sm" className="flex-shrink-0" />}
-                        {user?.subscriptionStatus === 'free' && <FreeIcon size="sm" className="flex-shrink-0" />}
+                        {user?.subscriptionStatus === 'premium' && <PremiumPlanIcon size="sm" className="flex-shrink-0" />}
+                        {user?.subscriptionStatus === 'basic' && <BasicPlanIcon size="sm" className="flex-shrink-0" />}
+                        {user?.subscriptionStatus === 'pro' && <span className="text-xs">⭐</span>}
+                        {user?.subscriptionStatus === 'free' && <FreePlanIcon size="sm" className="flex-shrink-0" />}
                       </div>
                     </div>
                     <ChevronDown className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />

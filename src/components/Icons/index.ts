@@ -1,12 +1,10 @@
 export {
-  FreeIcon,
-  BasicIcon,
-  PremiumIcon,
-  CrownIcon,
-  StarIcon,
-  ShieldIcon,
-  DiamondIcon,
-  SubscriptionIcon
+  SubscriptionIcon,
+  // Clean professional SVG icons
+  FreePlanIcon,
+  BasicPlanIcon,
+  PremiumPlanIcon,
+  ProPlanIcon
 } from './SubscriptionIcons';
 
 export {

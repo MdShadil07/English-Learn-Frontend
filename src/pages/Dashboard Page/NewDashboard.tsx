@@ -9,7 +9,7 @@ import RoomsView from '@/components/dashboard/features/RoomsView';
 import NotesView from '@/components/dashboard/features/NotesView';
 import CommunityView from '@/components/dashboard/features/CommunityView';
 import FocusModeView from '@/components/dashboard/features/FocusModeView';
-import AIChat from '@/components/dashboard/AIChat';
+import AIChat from '../../pages/AI Chat Page/AIChatPage';
 import AIPractice from '@/components/dashboard/AIPractice';
 import VoiceRooms from '@/components/dashboard/VoiceRooms';
 import { useAuth } from '@/contexts/AuthContext';

@@ -119,7 +119,16 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50/30 via-white to-teal-50/30 dark:from-slate-900/30 dark:via-emerald-900/20 dark:to-teal-900/30">
-      <BasicHeader />
+      <BasicHeader
+        user={{
+          id: user?.id || '1',
+          email: user?.email || 'admin@example.com',
+          fullName: user?.fullName || 'Administrator',
+          role: (user?.role as 'student' | 'teacher' | 'admin') || 'admin',
+          isPremium: false,
+          subscriptionStatus: 'none',
+        }}
+      />
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <motion.div

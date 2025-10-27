@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import BasicHeader from "@/components/layout/BasicHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +15,7 @@ import AdminAnalytics from "@/components/admin/AdminAnalytics";
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -73,21 +76,22 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      <div className="p-8 max-w-7xl mx-auto">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent flex items-center gap-3">
-              <Shield className="h-10 w-10 text-primary" />
-              Admin Dashboard
-            </h1>
-            <p className="text-muted-foreground">Manage users, tasks, and view analytics</p>
-          </div>
-          <Button variant="outline" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        </div>
+      <BasicHeader
+        user={{
+          id: user?.id || '1',
+          email: user?.email || 'admin@example.com',
+          fullName: user?.fullName || 'Administrator',
+          role: (user?.role as 'student' | 'teacher' | 'admin') || 'admin',
+          isPremium: false,
+          subscriptionStatus: 'none',
+        }}
+        showSidebarToggle={false}
+        sidebarOpen={false}
+        title="Admin Dashboard"
+        subtitle="Manage users, tasks, and analytics"
+      />
 
+      <div className="p-8 max-w-7xl mx-auto pt-20">
         <Tabs defaultValue="users" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="users" className="flex items-center gap-2">

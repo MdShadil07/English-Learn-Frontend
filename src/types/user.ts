@@ -4,10 +4,11 @@ export interface UserProfile {
   id: string;
   fullName: string;
   email: string;
-  avatar_url?: string;
+  username?: string;
+  avatar?: string; // Updated to match auth controller response
   level: number;
   isPremium: boolean;
-  subscriptionStatus: 'none' | 'free' | 'basic' | 'premium';
+  subscriptionStatus: 'none' | 'free' | 'basic' | 'premium' | 'pro';
   role: 'student' | 'teacher' | 'admin';
   bio?: string;
   location?: string;

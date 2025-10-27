@@ -40,7 +40,8 @@ const profileSchema = new Schema<IProfile>(
   }
 );
 
-// Index for better performance
+// Legacy indexes - keeping minimal for backward compatibility
+profileSchema.index({ userId: 1 }, { unique: true });
 
 const Profile: Model<IProfile> = mongoose.model<IProfile>('Profile', profileSchema);
 

@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
-import { User, RefreshToken } from '../../models/index';
-import { generateTokens } from '../../middleware/auth';
+import { User, RefreshToken, UserProfile } from '../../models/index';
+import { generateTokens } from '../../middleware/auth/auth';
 import authConfig from '../../config/auth';
 import { redisCache } from '../../config/redis';
 
 interface AuthRequest extends Request {
   user?: any;
+  token?: string;
 }
 
 export class AuthController {
@@ -77,10 +78,6 @@ export class AuthController {
         firstName: firstName.trim(),
         lastName: lastName ? lastName.trim() : undefined,
         username: username ? username.toLowerCase().trim() : undefined,
-        targetLanguage,
-        nativeLanguage: nativeLanguage?.trim(),
-        country: country?.trim(),
-        proficiencyLevel,
         role,
       });
 
@@ -97,9 +94,8 @@ export class AuthController {
       });
       await refreshTokenDoc.save();
 
-      // Update last login
-      user.lastLoginAt = new Date();
-      await user.save();
+      // Update last login in UserProfile (since lastLoginAt was moved there)
+      // TODO: Update UserProfile with lastLoginAt when profile exists
 
       // Return success response
       return res.status(201).json({
@@ -113,11 +109,7 @@ export class AuthController {
             lastName: user.lastName,
             username: user.username,
             fullName: user.fullName,
-            avatar: user.avatar,
-            targetLanguage: user.targetLanguage,
-            proficiencyLevel: user.proficiencyLevel,
             role: user.role,
-            isEmailVerified: user.isEmailVerified,
             createdAt: user.createdAt,
           },
           tokens: {
@@ -166,13 +158,8 @@ export class AuthController {
         });
       }
 
-      // Check if account is active
-      if (!user.isActive) {
-        return res.status(401).json({
-          success: false,
-          message: 'Account is deactivated. Please contact support.',
-        });
-      }
+      // Check if account is active (isActive field moved to UserProfile)
+      // TODO: Check UserProfile.isActive when profile exists
 
       // Verify password
       const isPasswordValid = await user.comparePassword(password);
@@ -195,9 +182,8 @@ export class AuthController {
       });
       await refreshTokenDoc.save();
 
-      // Update last login
-      user.lastLoginAt = new Date();
-      await user.save();
+      // Update last login in UserProfile (since lastLoginAt was moved there)
+      // TODO: Update UserProfile with lastLoginAt when profile exists
 
       // Return success response
       return res.json({
@@ -211,12 +197,7 @@ export class AuthController {
             lastName: user.lastName,
             username: user.username,
             fullName: user.fullName,
-            avatar: user.avatar,
-            targetLanguage: user.targetLanguage,
-            proficiencyLevel: user.proficiencyLevel,
             role: user.role,
-            isEmailVerified: user.isEmailVerified,
-            lastLoginAt: user.lastLoginAt,
             createdAt: user.createdAt,
           },
           tokens: {
@@ -366,17 +347,44 @@ export class AuthController {
         });
       }
 
-      // If not in cache, return current user data and cache it
-      const profileData = {
-        user: req.user,
+      // Fetch user profile data including avatar_url
+      const profile = await UserProfile.findOne({ userId: req.user._id })
+        .populate('userId', 'email firstName lastName username fullName role isEmailVerified createdAt')
+        .lean();
+
+      // Merge user data with profile data
+      const userData = {
+        id: req.user._id,
+        email: req.user.email,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        username: req.user.username,
+        fullName: req.user.fullName,
+        avatar: profile?.avatar_url || null, // Include avatar_url from profile
+        role: req.user.role,
+        isEmailVerified: req.user.isEmailVerified,
+        createdAt: req.user.createdAt,
+        // Include essential profile fields with safe access
+        ...(profile && {
+          targetLanguage: profile.targetLanguage,
+          proficiencyLevel: profile.proficiencyLevel,
+          bio: profile.bio,
+          experienceLevel: profile.experienceLevel,
+          field: profile.field,
+          location: profile.location,
+          isPremium: profile.isPremium,
+          subscriptionStatus: profile.isPremium ? 'premium' : 'basic',
+        })
       };
 
       // Cache for 5 minutes
-      await redisCache.setJSON(cacheKey, req.user, 300);
+      await redisCache.setJSON(cacheKey, userData, 300);
 
       return res.json({
         success: true,
-        data: profileData,
+        data: {
+          user: userData,
+        },
       });
 
     } catch (error) {
@@ -404,11 +412,6 @@ export class AuthController {
         'firstName',
         'lastName',
         'username',
-        'dateOfBirth',
-        'country',
-        'nativeLanguage',
-        'targetLanguage',
-        'proficiencyLevel',
       ];
 
       const updates = Object.keys(req.body).reduce((acc, key) => {
@@ -461,13 +464,6 @@ export class AuthController {
             lastName: user.lastName,
             username: user.username,
             fullName: user.fullName,
-            avatar: user.avatar,
-            dateOfBirth: user.dateOfBirth,
-            country: user.country,
-            nativeLanguage: user.nativeLanguage,
-            targetLanguage: user.targetLanguage,
-            proficiencyLevel: user.proficiencyLevel,
-            isEmailVerified: user.isEmailVerified,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
           },

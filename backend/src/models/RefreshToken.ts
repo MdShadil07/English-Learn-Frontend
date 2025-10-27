@@ -45,7 +45,7 @@ const refreshTokenSchema = new Schema<IRefreshToken>(
 );
 
 // Indexes for better performance
-refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // Auto-delete expired tokens
+// Note: expiresAt index is already defined in schema field with index: true
 
 // Static method to find valid token
 refreshTokenSchema.statics.findValidToken = function (token: string, userId: mongoose.Types.ObjectId) {

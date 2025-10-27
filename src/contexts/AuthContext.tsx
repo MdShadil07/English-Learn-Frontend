@@ -1,10 +1,13 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { authService } from '@/services/authService';
+import { api } from '@/utils/api';
+import { queryKeys, queryOptions } from '@/utils/queryKeys';
 
-// Custom User interface for MongoDB-based authentication
 export interface User {
   id: string;
   email: string;
-  firstName: string;
+  firstName?: string;
   lastName?: string;
   username?: string;
   fullName: string;
@@ -21,8 +24,9 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  signOut: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  signOut: () => void;
+  refreshUser: () => void;
+  updateUser: (updates: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,287 +45,209 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const isAuthenticated = !!(user || localStorage.getItem('accessToken'));
+  // Unified user profile query - single source of truth
+  const {
+    data: userData,
+    isLoading,
+    error,
+    refetch: refetchUserData,
+  } = useQuery({
+    queryKey: queryKeys.global.currentUser(),
+    queryFn: async () => {
+      console.log('🔄 AuthProvider: Fetching user profile via React Query...');
 
-  const refreshUser = async () => {
-    try {
-      console.log('🔄 AuthContext: refreshUser called');
-      // Check if we have custom API tokens
+      try {
+        // Try main profile API first (consistent with EditProfile)
+        const result = await api.profile.get();
+        console.log('📡 AuthProvider: Profile API result:', result);
+
+        if (result.success && result.data) {
+          // Transform to consistent format
+          const transformedUser: User = {
+            id: result.data.user?._id || result.data.user?.id || '1',
+            email: result.data.user?.email || 'user@example.com',
+            firstName: result.data.user?.firstName || '',
+            lastName: result.data.user?.lastName || '',
+            username: result.data.user?.username || '',
+            fullName: result.data.user?.fullName || result.data.user?.displayName || result.data.profile?.displayName || 'User',
+            avatar: result.data.user?.avatar || result.data.user?.avatar_url || result.data.profile?.avatar_url || undefined,
+            targetLanguage: result.data.profile?.targetLanguage || result.data.user?.targetLanguage || 'English',
+            proficiencyLevel: result.data.profile?.proficiencyLevel || result.data.user?.proficiencyLevel || 'beginner',
+            role: result.data.user?.role || 'student',
+            isEmailVerified: true, // Assume verified if we have profile data
+            createdAt: result.data.user?.createdAt || new Date().toISOString(),
+            lastLoginAt: result.data.user?.lastLoginAt,
+          };
+
+          console.log('✅ AuthProvider: User data transformed and cached');
+          return transformedUser;
+        }
+      } catch (error) {
+        console.error('❌ AuthProvider: Main profile API failed, trying auth API:', error);
+
+        // If it's a 401 error, the user is not authenticated
+        if (error instanceof Error && (error.message.includes('401') || error.message.includes('unauthorized'))) {
+          console.log('🚫 AuthProvider: User not authenticated (401)');
+          throw new Error('Not authenticated');
+        }
+
+        // Fallback to auth API
+        const accessToken = localStorage.getItem('accessToken');
+        if (accessToken) {
+          const authResult = await authService.getProfile(accessToken);
+          if (authResult.success && authResult.data?.user) {
+            console.log('✅ AuthProvider: Fallback to auth API successful');
+            return authResult.data.user;
+          }
+        }
+
+        // If fallback also fails, throw the original error
+        throw error;
+      }
+    },
+    ...queryOptions.user,
+    enabled: true, // Always enabled for authenticated users
+    staleTime: 30 * 1000, // 30 seconds for user data
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+    retry: (failureCount, error) => {
+      // Don't retry on 401 errors (unauthorized)
+      if (error?.message?.includes('401') || error?.message?.includes('unauthorized')) {
+        console.log('🚫 AuthContext: 401 error detected, not retrying');
+        return false;
+      }
+      // Retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+
+  // Update local user state when query data changes
+  useEffect(() => {
+    if (userData) {
+      console.log('🔄 AuthProvider: User state updated from React Query');
+      setUser(userData);
+      // Update localStorage for persistence
+      localStorage.setItem('userData', JSON.stringify(userData));
+    } else if (error) {
+      console.log('🚨 AuthProvider: User authentication failed, clearing data');
+      // Only clear data if it's an authentication error, not other types of errors
+      if (error.message === 'Not authenticated' || error.message?.includes('401') || error.message?.includes('unauthorized')) {
+        console.log('🚫 AuthProvider: Authentication error detected, clearing user data');
+        setUser(null);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userData');
+      }
+    }
+  }, [userData, error]);
+
+  // Check for existing session on mount
+  useEffect(() => {
+    const initializeAuth = async () => {
       const accessToken = localStorage.getItem('accessToken');
-      console.log('🔑 AuthContext refreshUser: Access token found:', !!accessToken);
-
-      if (accessToken) {
-        // Check if we have cached user data first
-        const cachedUserData = localStorage.getItem('userData');
-        if (cachedUserData) {
-          try {
-            const userData = JSON.parse(cachedUserData);
-            console.log('✅ AuthContext refreshUser: Using cached user data');
-            setUser(userData);
-            return;
-          } catch (parseError) {
-            console.error('❌ AuthContext refreshUser: Error parsing cached user data:', parseError);
-            localStorage.removeItem('userData');
-          }
-        }
-
-        console.log('📡 AuthContext refreshUser: Calling profile API...');
-        // Try to get user profile from API
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/profile`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        console.log('📡 AuthContext refreshUser: Profile API response status:', response.status);
-
-        if (response.ok) {
-          const result = await response.json();
-          console.log('📡 AuthContext refreshUser: Profile API result:', result);
-
-          if (result.success && result.data?.user) {
-            // Cache user data in localStorage for faster access
-            localStorage.setItem('userData', JSON.stringify(result.data.user));
-            console.log('✅ AuthContext refreshUser: User created and cached from API response');
-            setUser(result.data.user);
-            return;
-          }
-        } else if (response.status === 401) {
-          // Only clear tokens if we get a 401 (unauthorized) response
-          console.log('🚨 AuthContext refreshUser: 401 response, clearing invalid tokens');
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userData');
-          setUser(null);
-          return;
-        }
-        // For other errors (network, server errors, etc.), don't clear tokens
-        console.log('⚠️ AuthContext refreshUser: API call failed, keeping tokens');
+      if (!accessToken) {
+        console.log('ℹ️ AuthProvider: No access token found, user not authenticated');
+        setUser(null);
+        return;
       }
 
-      // No valid tokens found
-      setUser(null);
-    } catch (error) {
-      console.error('❌ AuthContext refreshUser: Error:', error);
-      // Don't clear tokens on network errors, just set user to null
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      // Check if we have cached user data
+      const cachedUserData = localStorage.getItem('userData');
+      if (cachedUserData) {
+        try {
+          const userData = JSON.parse(cachedUserData);
+          console.log('✅ AuthProvider: Using cached user data');
+          setUser(userData);
+        } catch (parseError) {
+          console.error('❌ AuthProvider: Error parsing cached user data:', parseError);
+          localStorage.removeItem('userData');
+        }
+      }
 
-  const signOut = async () => {
+      // Always refetch to ensure fresh data
+      refetchUserData();
+    };
+
+    initializeAuth();
+
+    // Listen for localStorage changes (cross-tab synchronization)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'accessToken' || e.key === 'userData') {
+        console.log('🔄 AuthProvider: Storage changed, reinitializing auth');
+        initializeAuth();
+      }
+    };
+
+    // Listen for manual auth updates (e.g., profile changes)
+    const handleAuthUpdate = (event: CustomEvent) => {
+      console.log('🔄 AuthProvider: Manual auth update received:', event.detail);
+      setUser(event.detail);
+      queryClient.setQueryData(queryKeys.global.currentUser(), event.detail);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('authUpdate', handleAuthUpdate as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('authUpdate', handleAuthUpdate as EventListener);
+    };
+  }, [refetchUserData, queryClient]);
+
+  // Sign out function
+  const signOut = useCallback(async () => {
+    console.log('🚪 AuthProvider: Signing out user');
     try {
-      setIsLoading(true);
-
-      // Clear custom API tokens and cached user data
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        await authService.logout(refreshToken);
+      }
+    } catch (error) {
+      console.error('❌ AuthProvider: Logout API call failed:', error);
+    } finally {
+      // Clear all auth data
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userData');
 
-      // Call API logout if we have a refresh token
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
-        try {
-          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/logout`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ refreshToken }),
-          });
-        } catch (error) {
-          console.error('Error calling API logout:', error);
-        }
-      }
+      // Clear React Query cache
+      queryClient.clear();
 
+      // Reset user state
       setUser(null);
-    } catch (error) {
-      console.error('Error in signOut:', error);
-    } finally {
-      setIsLoading(false);
+
+      console.log('✅ AuthProvider: User signed out successfully');
     }
-  };
+  }, [queryClient]);
 
-  useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        console.log('🚀 AuthContext: Initializing authentication check...');
-        // Check for custom API tokens
-        const accessToken = localStorage.getItem('accessToken');
-        console.log('🔑 AuthContext initial: Access token found:', !!accessToken);
+  // Refresh user data
+  const refreshUser = useCallback(() => {
+    console.log('🔄 AuthProvider: Manual user refresh requested');
+    refetchUserData();
+  }, [refetchUserData]);
 
-        if (accessToken) {
-          // Check if we have cached user data first
-          const cachedUserData = localStorage.getItem('userData');
-          if (cachedUserData) {
-            try {
-              const userData = JSON.parse(cachedUserData);
-              console.log('✅ AuthContext initial: Using cached user data');
-              setUser(userData);
-              setIsLoading(false);
-              return;
-            } catch (parseError) {
-              console.error('❌ AuthContext initial: Error parsing cached user data:', parseError);
-              localStorage.removeItem('userData');
-            }
-          }
+  // Update user data (for optimistic updates)
+  const updateUser = useCallback((updates: Partial<User>) => {
+    console.log('🔄 AuthProvider: Updating user data:', updates);
+    setUser(prev => prev ? { ...prev, ...updates } : null);
+    queryClient.setQueryData(queryKeys.global.currentUser(), (prev: User | undefined) =>
+      prev ? { ...prev, ...updates } : prev
+    );
+  }, [queryClient]);
 
-          console.log('📡 AuthContext initial: Calling profile API for initial auth...');
-          // Try to get user profile from API
-          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/profile`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-          });
-
-          console.log('📡 AuthContext initial: Profile API response status:', response.status);
-
-          if (response.ok) {
-            const result = await response.json();
-            console.log('📡 AuthContext initial: Profile API result:', result);
-
-            if (result.success && result.data?.user) {
-              // Cache user data in localStorage for faster access
-              localStorage.setItem('userData', JSON.stringify(result.data.user));
-              console.log('✅ AuthContext initial: User authenticated via API tokens');
-              setUser(result.data.user);
-              setIsLoading(false);
-              return;
-            }
-          } else if (response.status === 401) {
-            // Only clear tokens if we get a 401 (unauthorized) response
-            console.log('🚨 AuthContext initial: 401 response, clearing invalid tokens');
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('userData');
-          }
-          // For other errors (network, server errors, etc.), don't clear tokens
-        }
-
-        // No valid tokens found
-        setUser(null);
-      } catch (error) {
-        console.error('❌ AuthContext initial: Error:', error);
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getInitialSession();
-
-    // Listen for localStorage changes (for custom API tokens)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'accessToken') {
-        if (e.newValue) {
-          // Token was set, get user profile (but don't clear on failure)
-          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/profile`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${e.newValue}`,
-              'Content-Type': 'application/json',
-            },
-          })
-          .then(response => {
-            if (response.ok) {
-              return response.json();
-            } else if (response.status === 401) {
-              // Only clear tokens if we get a 401 (unauthorized) response
-              console.log('🚨 Storage handler: 401 response, clearing invalid tokens');
-              localStorage.removeItem('accessToken');
-              localStorage.removeItem('refreshToken');
-              localStorage.removeItem('userData');
-              setUser(null);
-              return null;
-            }
-            // For other errors, don't clear tokens
-            throw new Error(`HTTP ${response.status}`);
-          })
-          .then(result => {
-            if (result && result.success && result.data?.user) {
-              localStorage.setItem('userData', JSON.stringify(result.data.user));
-              setUser(result.data.user);
-            }
-          })
-          .catch(error => {
-            console.error('Storage handler: Error fetching user profile:', error);
-            // Don't clear tokens on network errors or other failures
-          });
-        } else {
-          // Token was removed
-          setUser(null);
-        }
-      }
-    };
-
-    // Listen for localStorage changes in the same window
-    const handleLocalStorageChange = async () => {
-      const accessToken = localStorage.getItem('accessToken');
-      if (accessToken) {
-        try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/profile`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            if (result.success && result.data?.user) {
-              localStorage.setItem('userData', JSON.stringify(result.data.user));
-              setUser(result.data.user);
-            }
-          } else if (response.status === 401) {
-            // Only clear tokens if we get a 401 (unauthorized) response
-            console.log('🚨 LocalStorage handler: 401 response, clearing invalid tokens');
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('userData');
-            setUser(null);
-          }
-          // For other errors, don't clear tokens
-        } catch (error) {
-          console.error('Error in localStorage change handler:', error);
-          // Don't clear tokens on network errors
-        }
-      } else {
-        setUser(null);
-      }
-    };
-
-    // Check immediately for localStorage changes
-    handleLocalStorageChange();
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleLocalStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleLocalStorageChange);
-    };
-  }, []);
+  // Check authentication status
+  const isAuthenticated = !!user && !error;
 
   const value: AuthContextType = {
     user,
     isAuthenticated,
-    isLoading,
+    isLoading: isLoading || (!user && !error), // Loading if no user data and no error
     signOut,
     refreshUser,
+    updateUser,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

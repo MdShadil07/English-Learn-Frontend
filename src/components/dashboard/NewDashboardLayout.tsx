@@ -71,32 +71,52 @@ const NewDashboardLayout = ({ children, activeView, onViewChange }: NewDashboard
             </div>
           </div>
 
-          {/* Right side actions */}
-          <div className="flex items-center gap-2">
-            <motion.button
-              whileHover={{ scale: 1.05, width: 'auto' }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 relative transition-all duration-300 hover:shadow-md hover:rounded-2xl w-full"
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            </motion.button>
+          {/* User info and actions */}
+          <div className="flex items-center gap-3">
+            {/* User greeting and role */}
+            <div className="hidden sm:flex flex-col items-end text-right">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                  {user?.fullName || 'User'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  {user?.role === 'teacher' ? 'Teacher' :
+                   user?.role === 'admin' ? 'Admin' :
+                   user?.role === 'student' ? 'Student' : 'Student'}
+                </span>
+              </div>
+            </div>
 
-            <motion.button
-              whileHover={{ scale: 1.05, width: 'auto' }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all duration-300 hover:shadow-md hover:rounded-2xl w-full"
-            >
-              <Calendar className="h-5 w-5" />
-            </motion.button>
+            {/* Right side actions */}
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.05, width: 'auto' }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 relative transition-all duration-300 hover:shadow-md hover:rounded-2xl w-full"
+              >
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              </motion.button>
 
-            <motion.button
-              whileHover={{ scale: 1.05, width: 'auto' }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all duration-300 hover:shadow-md hover:rounded-2xl w-full"
-            >
-              <Settings className="h-5 w-5" />
-            </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05, width: 'auto' }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all duration-300 hover:shadow-md hover:rounded-2xl w-full"
+              >
+                <Calendar className="h-5 w-5" />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05, width: 'auto' }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all duration-300 hover:shadow-md hover:rounded-2xl w-full"
+              >
+                <Settings className="h-5 w-5" />
+              </motion.button>
+            </div>
           </div>
         </header>
 

@@ -6,6 +6,7 @@ import compression from 'compression';
 import dotenv from 'dotenv';
 import cluster from 'cluster';
 import os from 'os';
+import path from 'path';
 
 // Import database connection
 import { database } from './config/database';
@@ -14,23 +15,24 @@ import { database } from './config/database';
 import { redisCache } from './config/redis';
 
 // Import clustering
-import { clusterManager } from './utils/cluster';
+import { clusterManager } from './utils/handlers/cluster';
+
+// Import enhanced error handling and monitoring
+import { enhancedHealthCheck, errorHandler } from './utils/handlers/errorHandler';
+
+// Import middleware
+import { apiRateLimit } from './middleware/security/rateLimit';
 
 // Import routes
 import authRoutes from './routes/auth/auth';
-import progressRoutes from './routes/progress';
-import userRoutes from './routes/user';
-import profileRoutes from './routes/profile';
-import accuracyRoutes from './routes/accuracy';
-import userLevelRoutes from './routes/userLevel.routes';
+import progressRoutes from './routes/Progress/progress';
+import userRoutes from './routes/User/user';
+import profileRoutes from './routes/Profile/profile';
+import accuracyRoutes from './routes/Accuracy/accuracy';
+import userLevelRoutes from './routes/UserLevel/userLevel.routes';
 
-// Import enhanced error handling and monitoring
-import { enhancedHealthCheck, errorHandler } from './utils/errorHandler';
-
-// Import middleware
-import { apiRateLimit } from './middleware/rateLimit';
-
-dotenv.config();
+// Import monitoring controller
+import { monitoringController } from './controllers/Monitoring/monitoring.controller';
 
 // Connect to database and cache
 async function initializeServices() {
@@ -94,6 +96,13 @@ async function startServer(): Promise<void> {
     app.use(express.json({ limit: '10mb' }));
     app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+    // Static file serving for uploads
+    app.use('/api/files', express.static(path.join(process.cwd(), 'uploads'), {
+      maxAge: '1d', // Cache for 1 day
+      etag: true,
+      lastModified: true
+    }));
+
     // Compression middleware with optimized settings for scalability
     app.use(compression({
       level: 6, // Compression level (1-9, higher = more compression but slower)
@@ -120,6 +129,12 @@ async function startServer(): Promise<void> {
 
     // Health check endpoint with performance metrics
     app.get('/health', enhancedHealthCheck);
+
+    // Enhanced monitoring endpoints
+    app.get('/ready', monitoringController.readinessCheck.bind(monitoringController));
+    app.get('/live', monitoringController.livenessCheck.bind(monitoringController));
+    app.get('/metrics', monitoringController.getMetrics.bind(monitoringController));
+    app.get('/metrics/prometheus', monitoringController.prometheusMetrics.bind(monitoringController));
 
     // API routes
     app.use('/api/auth', authRoutes);

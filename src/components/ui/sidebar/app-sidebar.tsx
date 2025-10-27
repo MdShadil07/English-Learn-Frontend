@@ -368,7 +368,9 @@ export function AppSidebar({
                       <div className="flex items-center gap-1">
                         <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500"></div>
                         <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                          Student
+                          {user?.role === 'teacher' ? 'Teacher' :
+                           user?.role === 'admin' ? 'Admin' :
+                           user?.role === 'student' ? 'Student' : 'Student'}
                         </span>
                       </div>
                     </div>

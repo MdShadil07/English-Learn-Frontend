@@ -8,7 +8,9 @@ interface CacheConfig {
   disconnect: () => Promise<void>;
   get: (key: string) => Promise<string | null>;
   set: (key: string, value: string, ttl?: number) => Promise<void>;
-  del: (key: string) => Promise<number>;
+  setex: (key: string, ttl: number, value: string) => Promise<void>;
+  del: (...keys: string[]) => Promise<number>;
+  keys: (pattern: string) => Promise<string[]>;
   exists: (key: string) => Promise<number>;
   isConnected: () => boolean;
 }
@@ -86,25 +88,47 @@ class RedisCache implements CacheConfig {
     }
   }
 
+  async setex(key: string, ttl: number, value: string): Promise<void> {
+    try {
+      if (!this.client || !this.isConnected()) {
+        return;
+      }
+      await this.client.setex(key, ttl, value);
+    } catch (error) {
+      console.error('❌ Redis SETEX error:', error);
+    }
+  }
+
   async set(key: string, value: string, ttl?: number): Promise<void> {
     try {
       if (!this.client || !this.isConnected()) {
         return;
       }
-
-      const expiry = ttl || this.DEFAULT_TTL;
+      const expiry = ttl ?? this.DEFAULT_TTL;
       await this.client.setex(key, expiry, value);
     } catch (error) {
-      console.error('❌ Redis SET error:', error);
+      console.error('❌ Redis SETEX error:', error);
     }
   }
 
-  async del(key: string): Promise<number> {
+  async keys(pattern: string): Promise<string[]> {
+    try {
+      if (!this.client || !this.isConnected()) {
+        return [];
+      }
+      return await this.client.keys(pattern);
+    } catch (error) {
+      console.error('❌ Redis KEYS error:', error);
+      return [];
+    }
+  }
+
+  async del(...keys: string[]): Promise<number> {
     try {
       if (!this.client || !this.isConnected()) {
         return 0;
       }
-      return await this.client.del(key);
+      return await this.client.del(...keys);
     } catch (error) {
       console.error('❌ Redis DEL error:', error);
       return 0;

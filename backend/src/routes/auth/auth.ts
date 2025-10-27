@@ -5,7 +5,7 @@ import {
   optionalAuth,
   refreshAuthToken,
   requireEmailVerification
-} from '../../middleware/auth';
+} from '../../middleware/auth/auth';
 import {
   validateRegistration,
   validateLogin,
@@ -14,11 +14,11 @@ import {
   validateChangePassword,
   validatePasswordResetRequest,
   validatePasswordReset,
-} from '../../middleware/validation';
+} from '../../middleware/validation/validation';
 import {
   authRateLimit,
   passwordResetRateLimit
-} from '../../middleware/rateLimit';
+} from '../../middleware/security/rateLimit';
 
 const router = Router();
 

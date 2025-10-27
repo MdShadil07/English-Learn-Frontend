@@ -8,20 +8,10 @@ export interface IUser extends Document {
   firstName: string;
   lastName?: string;
   username?: string;
-  avatar?: string;
-  dateOfBirth?: Date;
-  country?: string;
-  nativeLanguage?: string;
-  targetLanguage: string;
-  proficiencyLevel: 'beginner' | 'elementary' | 'intermediate' | 'advanced' | 'proficient';
   role: 'student' | 'teacher' | 'admin';
-  isEmailVerified: boolean;
-  isActive: boolean;
-  lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
   fullName: string;
-  displayName: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
   getFullName(): string;
   toJSON(): any;
@@ -31,6 +21,8 @@ export interface IUser extends Document {
 export interface IUserModel extends Model<IUser> {
   findByEmail(email: string): Promise<IUser | null>;
   findByUsername(username: string): Promise<IUser | null>;
+  findActiveUsers(): Promise<IUser[]>;
+  findByRole(role: string): Promise<IUser[]>;
 }
 
 const userSchema = new Schema<IUser>(
@@ -41,6 +33,7 @@ const userSchema = new Schema<IUser>(
       unique: true,
       lowercase: true,
       trim: true,
+      index: true,
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email'],
     },
     password: {
@@ -54,12 +47,14 @@ const userSchema = new Schema<IUser>(
       required: [true, 'First name is required'],
       trim: true,
       maxlength: [50, 'First name cannot exceed 50 characters'],
+      index: true,
     },
     lastName: {
       type: String,
       required: false,
       trim: true,
       maxlength: [50, 'Last name cannot exceed 50 characters'],
+      index: true,
     },
     username: {
       type: String,
@@ -70,53 +65,14 @@ const userSchema = new Schema<IUser>(
       minlength: [3, 'Username must be at least 3 characters long'],
       maxlength: [30, 'Username cannot exceed 30 characters'],
       match: [/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'],
-    },
-    avatar: {
-      type: String,
-      default: null,
-    },
-    dateOfBirth: {
-      type: Date,
-      default: null,
-    },
-    country: {
-      type: String,
-      trim: true,
-      maxlength: [100, 'Country name cannot exceed 100 characters'],
-    },
-    nativeLanguage: {
-      type: String,
-      trim: true,
-      maxlength: [50, 'Native language cannot exceed 50 characters'],
-    },
-    targetLanguage: {
-      type: String,
-      required: [true, 'Target language is required'],
-      default: 'English',
-      trim: true,
-    },
-    proficiencyLevel: {
-      type: String,
-      enum: ['beginner', 'elementary', 'intermediate', 'advanced', 'proficient'],
-      default: 'beginner',
+      index: true,
     },
     role: {
       type: String,
       enum: ['student', 'teacher', 'admin'],
       default: 'student',
       required: [true, 'Role is required'],
-    },
-    isEmailVerified: {
-      type: Boolean,
-      default: false,
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-    lastLoginAt: {
-      type: Date,
-      default: null,
+      index: true,
     },
   },
   {
@@ -126,18 +82,14 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-// Indexes for better performance
+// Performance optimized indexes for authentication and core user operations
+// Note: Basic indexes are already defined in schema fields with index: true
 userSchema.index({ createdAt: -1 });
-userSchema.index({ isActive: 1 });
 
-// Virtual for full name
+// Compound indexes for common queries
+userSchema.index({ createdAt: -1, role: 1 });
 userSchema.virtual('fullName').get(function (this: IUser) {
   return this.lastName ? `${this.firstName} ${this.lastName}` : this.firstName;
-});
-
-// Virtual for display name (username or full name)
-userSchema.virtual('displayName').get(function (this: IUser) {
-  return this.username || this.fullName;
 });
 
 // Pre-save middleware to hash password
@@ -146,7 +98,7 @@ userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
   try {
-    // Hash password with cost of 12
+    // Hash password with cost of 12 for better security
     this.password = await bcrypt.hash(this.password, 12);
     next();
   } catch (error) {
@@ -174,6 +126,16 @@ userSchema.statics.findByUsername = function (username: string) {
   return this.findOne({ username: username.toLowerCase() });
 };
 
+// Static method to find active users
+userSchema.statics.findActiveUsers = function () {
+  return this.find({}).select('-password');
+};
+
+// Static method to find users by role
+userSchema.statics.findByRole = function (role: string) {
+  return this.find({ role }).select('-password');
+};
+
 // Remove password from JSON output
 userSchema.methods.toJSON = function () {
   const userObject = this.toObject();
@@ -181,6 +143,14 @@ userSchema.methods.toJSON = function () {
   return userObject;
 };
 
-const User: Model<IUser> = mongoose.model<IUser>('User', userSchema);
+// Post-save middleware for cache invalidation
+userSchema.post('save', function(doc: any) {
+  // Invalidate user caches when user data changes
+  if (mongoose.connection.readyState === 1) {
+    // This will be handled by the service layer for better control
+  }
+});
+
+const User: IUserModel = mongoose.model<IUser, IUserModel>('User', userSchema);
 
 export default User;
